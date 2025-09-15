@@ -1,0 +1,471 @@
+:root {
+  --clr-white: #fff;
+  --clr-primary: #5c4033; /* Rich coffee brown */
+  --clr-light: rgba(92, 64, 51, 0.08); /* Soft brown for hover */
+  --clr-info-dark: #7d8da1;
+  --clr-danger: #ff7782;
+  --clr-hover-bg: rgba(92, 64, 51, 0.12); /* Slightly darker hover */
+  --transition: all 0.3s ease;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Sidebar */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 250px;
+  height: 100vh;
+  background: var(--clr-white);
+  box-shadow: 0 2rem 3rem var(--clr-light);
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  padding-top: 1.4rem;
+  transition: var(--transition);
+}
+
+.sidebar .top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.sidebar .logo h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--clr-primary);
+}
+
+.sidebar .logo .danger {
+  color: var(--clr-danger);
+}
+
+.sidebar .close span {
+  font-size: 2rem;
+  cursor: pointer;
+  color: var(--clr-info-dark);
+  display: none; /* show only on mobile */
+}
+
+.sidebar a {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 2rem;
+  color: var(--clr-info-dark);
+  font-weight: 500;
+  transition: var(--transition);
+  border-left: 4px solid transparent;
+  text-decoration: none;
+}
+
+.sidebar a span {
+  font-size: 1.6rem;
+  transition: margin-left 0.3s ease;
+}
+
+.sidebar a:hover {
+  background: var(--clr-hover-bg);
+  color: var(--clr-primary);
+}
+
+.sidebar a:hover span {
+  margin-left: 0.5rem;
+}
+
+.sidebar a.active {
+  background: var(--clr-light);
+  color: var(--clr-primary);
+  border-left: 4px solid var(--clr-primary); /* Brown line only on active */
+  padding-left: 1.6rem;
+}
+
+.sidebar a:last-child {
+  margin-top: auto;
+  margin-bottom: 1rem;
+}
+
+main {
+  margin-left: 250px; /* Match the sidebar width */
+  padding: 2rem;
+}
+
+/* ====================
+   Dashboard Top Section
+==================== */
+/* ====================
+   Insights + Latest Users Container
+==================== */
+.dashboard-top {
+  display: flex;
+  gap: 2rem;
+  align-items: stretch;
+  margin-top: 2rem;
+}
+
+form {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--clr-white);
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 1rem 2rem var(--clr-light);
+  font-family: 'Poppins', sans-serif;
+  width: fit-content;
+}
+
+form label {
+  font-weight: 600;
+  color: var(--clr-primary);
+}
+
+form input[type="date"] {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--clr-light);
+  border-radius: 0.5rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--clr-dark);
+  background: #fdfaf8;
+}
+
+form button {
+  padding: 0.6rem 1.2rem;
+  background-color: var(--clr-primary);
+  color: #fff;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+form button:hover {
+  background-color: #4b2f21; /* Slightly darker brown for hover */
+}
+
+
+@media (max-width: 600px) {
+  form {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+
+
+/* ====================
+   Insights (Sales, Orders, Users)
+==================== */
+.insights {
+  display: flex;
+  flex: 3;
+  gap: 1.5rem;
+  height: 320px; /* Fixed height */
+}
+
+
+
+.insights > div {
+  background: var(--clr-white);
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 1rem 2rem var(--clr-light);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+
+
+.insights > div:hover {
+  box-shadow: none;
+}
+
+.insights span {
+  background: var(--clr-primary);
+  color: white;
+  font-size: 2rem;
+  padding: 0.6rem;
+  border-radius: 50%;
+  margin-bottom: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+}
+
+.insights .expenses span {
+  background: var(--clr-danger);
+}
+.insights .income span {
+  background: #3fc380;
+}
+
+.insights h3 {
+  color: var(--clr-info-dark);
+  margin-bottom: 0.5rem;
+}
+
+.insights h1 {
+  font-size: 1.6rem;
+  color: var(--clr-primary);
+}
+
+.insights small {
+  margin-top: 1rem;
+  color: var(--clr-info-dark);
+}
+
+/* ====================
+   Latest Users List
+==================== */
+.recent_updates {
+  flex: 1.5;
+  background: var(--clr-white);
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 1rem 2rem var(--clr-light);
+  height: 275px; /* Match other boxes */
+  display: flex;
+  flex-direction: column;
+}
+
+.recent_updates h2 {
+  color: var(--clr-dark);
+  margin-bottom: 1rem;
+  flex-shrink: 0;
+}
+
+/* New scrollable container */
+.recent-scroll {
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Reuse existing styles */
+.recent_updates .update {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.recent_updates .profile-photo {
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.recent_updates .profile-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.recent_updates .message p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--clr-info-dark);
+  line-height: 1.2;
+}
+
+.recent_updates .message b {
+  color: var(--clr-dark);
+}
+
+/* Scrollbar */
+.recent-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.recent-scroll::-webkit-scrollbar-thumb {
+  background: var(--clr-light);
+  border-radius: 3px;
+}
+
+
+
+
+/* CHART + TOP SELLING PRODUCTS SIDE BY SIDE */
+.dashboard-bottom {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1rem;
+  width: 100%;
+  align-items: stretch; /* Ensures equal height between boxes */
+}
+
+/* CHART BOX */
+.chart-box {
+  flex: 2;
+  background: var(--clr-white);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--box-shadow);
+  padding: var(--card-padding);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.chart-box h2 {
+  color: var(--clr-dark);
+  margin-bottom: 1rem;
+}
+
+/* Chart canvas */
+#myChart {
+  width: 100% !important;
+  height: auto !important;
+  max-height: 320px;
+}
+
+/* TOP SELLING BOX */
+.top-selling {
+  flex: 1;
+  background: var(--clr-white);
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 1rem 2rem var(--clr-light);
+  height: 320px; /* Match insights height */
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+
+
+.top-selling h2 {
+  color: var(--clr-dark);
+  margin-bottom: 1rem;
+  flex-shrink: 0;
+}
+
+/* Scrollable content inside top selling */
+.top-selling-scroll {
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* PRODUCT ITEM STYLES */
+.top-selling .item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.top-selling .profile-photo img {
+  width: 2.8rem;
+  height: 2.8rem;
+  object-fit: cover;
+  border-radius: 50%; /* this makes it a circle */
+}
+
+
+.top-selling .product-info h3 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--clr-dark);
+}
+
+.top-selling .product-info small {
+  color: var(--clr-info-dark);
+  font-size: 0.75rem;
+}
+
+/* SCROLLBAR for inner scroll */
+.top-selling-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.top-selling-scroll::-webkit-scrollbar-thumb {
+  background: var(--clr-light);
+  border-radius: 3px;
+}
+
+
+.recent_order {
+  width: 100%;
+  background: var(--clr-white);
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 1rem 2rem var(--clr-light);
+  margin-top: 2rem;
+  overflow-x: auto;
+}
+
+.recent_order h2 {
+  margin-bottom: 1rem;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+/* Orders Table */
+.recent_order table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--clr-white);
+}
+
+.recent_order thead {
+  background-color: var(--clr-light);
+  color: var(--clr-primary);
+}
+
+.recent_order th,
+.recent_order td {
+  padding: 1rem;
+  text-align: left;
+  font-size: 0.85rem;
+  border-bottom: 1px solid var(--clr-light);
+  color: var(--clr-info-dark);
+}
+
+.recent_order th {
+  font-weight: 600;
+}
+
+.recent_order tbody tr:hover {
+  background-color: var(--clr-hover-bg); /* Soft brown hover effect */
+}
+
+.recent_order td.success {
+  color: var(--clr-primary); /* Coffee brown for success */
+  font-weight: 600;
+}
+
+.recent_order td.warning {
+  color: var(--clr-danger);
+  font-weight: 600;
+}
+
+/* Show All Link */
+.recent_order a {
+  display: block;
+  text-align: right;
+  margin-top: 1rem;
+  color: var(--clr-primary);
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.recent_order a:hover {
+  color: #3e2e23; /* Darker coffee hover */
+}
+
+

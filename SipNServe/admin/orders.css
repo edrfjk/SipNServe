@@ -1,0 +1,333 @@
+:root {
+  --clr-white: #fff;
+  --clr-primary: #5c4033; /* Rich coffee brown */
+  --clr-light: rgba(92, 64, 51, 0.08); /* Soft brown for hover */
+  --clr-info-dark: #7d8da1;
+  --clr-danger: #ff7782;
+  --clr-hover-bg: rgba(92, 64, 51, 0.12); /* Slightly darker hover */
+  --transition: all 0.3s ease;
+  --clr-success: #28a745;
+  --clr-success-dark: #1e7e34;
+}
+
+
+body {
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Sidebar */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 250px;
+  height: 100vh;
+  background: var(--clr-white);
+  box-shadow: 0 2rem 3rem var(--clr-light);
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  padding-top: 1.4rem;
+  transition: var(--transition);
+}
+
+.sidebar .top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.sidebar .logo h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--clr-primary);
+}
+
+.sidebar .logo .danger {
+  color: var(--clr-danger);
+}
+
+.sidebar .close span {
+  font-size: 2rem;
+  cursor: pointer;
+  color: var(--clr-info-dark);
+  display: none; /* show only on mobile */
+}
+
+.sidebar a {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 2rem;
+  color: var(--clr-info-dark);
+  font-weight: 500;
+  transition: var(--transition);
+  border-left: 4px solid transparent;
+  text-decoration: none;
+}
+
+.sidebar a span {
+  font-size: 1.6rem;
+  transition: margin-left 0.3s ease;
+}
+
+.sidebar a:hover {
+  background: var(--clr-hover-bg);
+  color: var(--clr-primary);
+}
+
+.sidebar a:hover span {
+  margin-left: 0.5rem;
+}
+
+.sidebar a.active {
+  background: var(--clr-light);
+  color: var(--clr-primary);
+  border-left: 4px solid var(--clr-primary); /* Brown line only on active */
+  padding-left: 1.6rem;
+}
+
+.sidebar a:last-child {
+  margin-top: auto;
+  margin-bottom: 1rem;
+}
+
+main {
+  margin-left: 250px; /* Match the sidebar width */
+  padding: 2rem;
+}
+
+
+
+
+
+/* ======= Manage Users Table ======= */
+.recent_order {
+  margin-top: 2rem;
+  background: var(--clr-white);
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 1rem 2rem var(--clr-light);
+  overflow-x: auto;
+}
+
+.recent_order h2 {
+  color: var(--clr-dark);
+  margin-bottom: 1rem;
+}
+
+/* Table styling */
+.recent_order table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.recent_order table thead {
+  background-color: rgba(92, 64, 51, 0.05);
+}
+
+.recent_order table th,
+.recent_order table td {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--clr-light);
+}
+
+.recent_order table th {
+  font-weight: 600;
+  color: var(--clr-dark);
+}
+
+.recent_order table td img {
+  width: 2.5rem;
+  height: 2.5rem;
+  object-fit: cover;
+  border-radius: 50%;
+  box-shadow: 0 0 3px rgba(0,0,0,0.1);
+}
+
+/* Status badge styling */
+.success {
+  color: #3fc380;
+  font-weight: 600;
+}
+
+.warning {
+  color: #ff9f43;
+  font-weight: 600;
+}
+
+/* Action links */
+a.success, a.danger {
+  display: inline-block;
+  font-size: 0.85rem;
+  margin-top: 0.3rem;
+  text-decoration: underline;
+  transition: all 0.2s ease;
+}
+
+a.danger {
+  color: #ff6b6b;
+}
+
+a.success {
+  color: #3fc380;
+}
+
+a.success:hover,
+a.danger:hover {
+  opacity: 0.8;
+}
+
+/* Responsive fix (optional for mobile) */
+@media (max-width: 768px) {
+  .recent_order table,
+  .recent_order table thead,
+  .recent_order table tbody,
+  .recent_order table th,
+  .recent_order table td,
+  .recent_order table tr {
+    display: block;
+  }
+
+  .recent_order table tr {
+    margin-bottom: 1rem;
+    border-bottom: 2px solid var(--clr-light);
+  }
+
+  .recent_order table td {
+    padding-left: 50%;
+    position: relative;
+  }
+
+  .recent_order table td::before {
+    position: absolute;
+    left: 1rem;
+    top: 0.75rem;
+    width: 45%;
+    white-space: nowrap;
+    font-weight: 600;
+    color: var(--clr-info-dark);
+  }
+
+  /* Add specific label content if needed */
+}
+
+.status-btn {
+  padding: 0.5rem 1rem;
+  min-width: 110px; /* Makes both buttons equal width */
+  text-align: center;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  color: white;
+  display: inline-block;
+}
+
+.status-btn.success {
+  background-color: #5c4033; /* Coffee brown for activate */
+}
+
+.status-btn.danger {
+  background-color: #b0413e; /* Reddish coffee tone for deactivate */
+}
+
+.status-btn:hover {
+  opacity: 0.9;
+}
+
+/* Button styling */
+.btn {
+  padding: 0.4rem 1rem;
+  border: none;
+  border-radius: 0.4rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  transition: background 0.3s ease, color 0.3s ease;
+  display: inline-block;
+}
+
+.primary-btn {
+  background-color: var(--clr-primary);
+  color: white;
+}
+
+.primary-btn:hover {
+  background-color: var(--clr-primary-dark);
+}
+
+.danger-btn {
+  background-color: var(--clr-danger);
+  color: white;
+}
+
+.primary-btn {
+  background-color: var(--clr-primary, #5c4033);
+  color: #fff;
+}
+
+.primary-btn:hover {
+  background-color: var(--clr-primary-dark, #3e2c21);
+}
+
+.success-btn {
+  background-color: var(--clr-success);
+  color: white;
+}
+
+.success-btn:hover {
+  background-color: var(--clr-success-dark);
+}
+
+
+/* order */
+/* Base dropdown */
+.status-dropdown {
+  padding: 8px 12px;
+  border-radius: 5px;
+  border: none;
+  font-weight: bold;
+  min-width: 140px;
+  cursor: pointer;
+  color: #fff;
+}
+
+/* Status-specific styles */
+.pending-option {
+  background-color: #f1c40f; /* Yellow */
+}
+
+.confirmed-option {
+  background-color: #2ecc71; /* Green */
+}
+
+.cancelled-option {
+  background-color: #e74c3c; /* Red */
+}
+
+.action-btn {
+    min-width: 100px;
+    text-align: center;
+    padding: 6px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    display: inline-block;
+    transition: background-color 0.3s ease;
+}
+
+.danger-btn {
+    background-color: #d9534f;
+    color: white;
+}
+.danger-btn:hover {
+    background-color: #c9302c;
+}
+
