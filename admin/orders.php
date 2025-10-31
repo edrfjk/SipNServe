@@ -3,6 +3,34 @@
 
 session_start();
 include '../includes/db.php';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['order_id'], $_POST['status'])) {
+        $orderId = intval($_POST['order_id']);
+        $newStatus = $_POST['status'];
+        $allowedStatuses = ['Pending', 'Completed', 'Cancelled'];
+        if (in_array($newStatus, $allowedStatuses)) {
+            $stmt = $conn->prepare("UPDATE orders SET status = ? WHERE id = ?");
+            $stmt->bind_param("si", $newStatus, $orderId);
+            $stmt->execute();
+        }
+    }
+
+    // Delivery status update
+    if (isset($_POST['order_id'], $_POST['delivery_status'])) {
+        $orderId = intval($_POST['order_id']);
+        $deliveryStatus = $_POST['delivery_status'];
+        $allowedDelivery = ['Pending', 'Picked Up', 'On the Way', 'Delivered', 'Cancelled'];
+        if (in_array($deliveryStatus, $allowedDelivery)) {
+            $stmt = $conn->prepare("UPDATE orders SET delivery_status = ? WHERE id = ?");
+            $stmt->bind_param("si", $deliveryStatus, $orderId);
+            $stmt->execute();
+        }
+    }
+
+    header("Location: orders.php");
+    exit;
+}
+
 if (!isset($_SESSION['admin'])) header("Location: ../login.php");
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'], $_POST['status'])) {
@@ -95,39 +123,87 @@ $orders = $conn->query("SELECT o.*, u.username, p.name, p.image
             <th>Product</th>
             <th>Qty</th>
             <th>Total</th>
+            <th>Payment Method</th>
+            <th>Delivery Status</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <?php while ($o = $orders->fetch_assoc()): ?>
-          <tr>
-            <td><?= $o['username'] ?></td>
-            <td><img src="../assets/images/products/<?= $o['image'] ?>" width="40"> <?= $o['name'] ?></td>
-            <td><?= $o['quantity'] ?></td>
-            <td>₱<?= number_format($o['total_price'], 2) ?></td>
-            
-                      <td colspan="2">
-              <form method="post" action="orders.php" style="display: flex; align-items: center; gap: 8px;">
-                  <input type="hidden" name="order_id" value="<?= $o['id'] ?>">
+<tr>
+  <td><?= $o['username'] ?></td>
+  <td><img src="../assets/images/products/<?= $o['image'] ?>" width="40"> <?= $o['name'] ?></td>
+  <td><?= $o['quantity'] ?></td>
+  <td>₱<?= number_format($o['total_price'], 2) ?></td>
+  <td><?= htmlspecialchars($o['payment_method']) ?></td>
 
-                  <select name="status" 
-                      class="status-dropdown <?= strtolower($o['status']) ?>-option" 
-                      onchange="this.form.submit()">
-                      <option value="Pending" <?= $o['status'] === 'Pending' ? 'selected' : '' ?>>Pending</option>
-                      <option value="Confirmed" <?= $o['status'] === 'Confirmed' ? 'selected' : '' ?>>Confirmed</option>
-                      <option value="Cancelled" <?= $o['status'] === 'Cancelled' ? 'selected' : '' ?>>Cancelled</option>
-                  </select>
+  <!-- Delivery Status + Call Button -->
+  <td>
+    <div style="display:flex; align-items:center; gap:5px;">
+      <form method="post" action="orders.php" style="margin:0;">
+        <input type="hidden" name="order_id" value="<?= $o['id'] ?>">
+        <select name="delivery_status" onchange="this.form.submit()"
+            style="padding:5px 8px; border-radius:5px; border:1px solid #ccc;
+                   <?php
+                       switch ($o['delivery_status']) {
+                           case 'Pending': echo 'background-color:#fdd835; color:#000;'; break;
+                           case 'Picked Up': echo 'background-color:#42a5f5; color:#fff;'; break;
+                           case 'On the Way': echo 'background-color:#fb8c00; color:#fff;'; break;
+                           case 'Delivered': echo 'background-color:#66bb6a; color:#fff;'; break;
+                           case 'Cancelled': echo 'background-color:#ef5350; color:#fff;'; break;
+                           default: echo 'background-color:#fff; color:#000;';
+                       }
+                   ?>"
+        >
+            <option value="Pending" <?= $o['delivery_status'] === 'Pending' ? 'selected' : '' ?>>Pending</option>
+            <option value="Picked Up" <?= $o['delivery_status'] === 'Picked Up' ? 'selected' : '' ?>>Picked Up</option>
+            <option value="On the Way" <?= $o['delivery_status'] === 'On the Way' ? 'selected' : '' ?>>On the Way</option>
+            <option value="Delivered" <?= $o['delivery_status'] === 'Delivered' ? 'selected' : '' ?>>Delivered</option>
+            <option value="Cancelled" <?= $o['delivery_status'] === 'Cancelled' ? 'selected' : '' ?>>Cancelled</option>
+        </select>
+      </form>
 
-                  <a href="?delete=<?= $o['id'] ?>" 
-                    class="btn danger-btn action-btn" 
-                    onclick="return confirm('Are you sure you want to delete this order?');">
-                    🗑 Delete
-                  </a>
-              </form>
+      <a href="https://www.foodpanda.ph" target="_blank" 
+         title="Assign to delivery rider" 
+         style="font-size:18px; color:#ff6f61; text-decoration:none; display:flex; align-items:center;">
+         📞
+      </a>
+    </div>
+  </td>
 
-          </td>
+  <!-- Order Status + Delete -->
+  <td>
+    <div style="display:flex; align-items:center; gap:5px;">
+      <form method="post" action="orders.php" style="margin:0;">
+        <input type="hidden" name="order_id" value="<?= $o['id'] ?>">
+<select name="status" onchange="this.form.submit()"
+    style="padding:5px 8px; border-radius:5px; border:1px solid #ccc;
+           <?php
+               switch ($o['status']) {
+                   case 'Pending': echo 'background-color:#fdd835; color:#000;'; break;
+                   case 'Completed': echo 'background-color:#66bb6a; color:#fff;'; break;
+                   case 'Cancelled': echo 'background-color:#ef5350; color:#fff;'; break;
+                   default: echo 'background-color:#fff; color:#000;';
+               }
+           ?>"
+>
+    <option value="Pending" <?= $o['status'] === 'Pending' ? 'selected' : '' ?>>Pending</option>
+    <option value="Completed" <?= $o['status'] === 'Completed' ? 'selected' : '' ?>>Completed</option>
+    <option value="Cancelled" <?= $o['status'] === 'Cancelled' ? 'selected' : '' ?>>Cancelled</option>
+</select>
+      </form>
 
-          </tr>
+      <a href="?delete=<?= $o['id'] ?>" 
+         class="btn danger-btn action-btn" 
+         onclick="return confirm('Are you sure you want to delete this order?');"
+         style="padding:5px 8px; border-radius:5px; background:#ef5350; color:#fff; text-decoration:none; display:flex; align-items:center;">
+         Delete
+      </a>
+    </div>
+  </td>
+</tr>
+
+
           <?php endwhile; ?>
         </tbody>
       </table>

@@ -2,8 +2,21 @@
 session_start();
 include '../includes/db.php';
 
-$filter = isset($_GET['search']) ? $_GET['search'] : '';
-$products = $conn->query("SELECT * FROM products WHERE name LIKE '%$filter%' OR category LIKE '%$filter%' ORDER BY id DESC");
+$filter = isset($_GET['search']) ? $conn->real_escape_string($_GET['search']) : '';
+$type   = isset($_GET['type']) ? $conn->real_escape_string($_GET['type']) : '';
+
+// Base query
+$query = "SELECT * FROM products WHERE (name LIKE '%$filter%' OR category LIKE '%$filter%')";
+
+// Add category filter if selected (Hot or Iced)
+if ($type != '') {
+    $query .= " AND category = '$type'";
+}
+
+$query .= " ORDER BY id DESC";
+
+$products = $conn->query($query) or die($conn->error);
+
 ?>
 
 <!DOCTYPE html>
@@ -111,6 +124,31 @@ $products = $conn->query("SELECT * FROM products WHERE name LIKE '%$filter%' OR 
     <section id="product1" class="section-p1">
         <h2>Our Coffee Selection</h2>
         <p><?= $filter ? "Search results for '$filter'" : "Browse our categories" ?></p>
+<!-- Coffee Type Filter -->
+<div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 25px; margin-right: 20px;">
+  <form method="GET" action="menu.php" 
+        style="background-color: #f6f2ee; padding: 8px 15px; border-radius: 25px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
+    
+    <!-- Keep the current search if active -->
+    <input type="hidden" name="search" value="<?= htmlspecialchars($filter) ?>">
+
+    <label for="type" 
+           style="font-weight: 600; color: #4b2e1e; font-family: 'Poppins', sans-serif; font-size: 14px;">
+      Show:
+    </label>
+
+    <select name="type" id="type" onchange="this.form.submit()"
+            style="border: none; background-color: #fff; padding: 6px 12px; border-radius: 20px; font-size: 14px; color: #4b2e1e; cursor: pointer; outline: none; font-family: 'Poppins', sans-serif;">
+      <option value="">All</option>
+      <option value="Hot Coffee" <?= (isset($_GET['type']) && $_GET['type'] == 'Hot Coffee') ? 'selected' : '' ?>>Hot</option>
+      <option value="Iced Coffee" <?= (isset($_GET['type']) && $_GET['type'] == 'Iced Coffee') ? 'selected' : '' ?>>Iced</option>
+    </select>
+  </form>
+</div>
+
+
+
+
         <div class="pro-container">
             <?php while ($p = $products->fetch_assoc()): ?>
                 <div class="pro" onclick="openPopup(<?= $p['id'] ?>)">
@@ -123,7 +161,7 @@ $products = $conn->query("SELECT * FROM products WHERE name LIKE '%$filter%' OR 
                             <i class="fas fa-star"></i><i class="fas fa-star"></i>
                             <i class="fas fa-star-half-alt"></i>
                         </div>
-                        <h4>₱<?= number_format($p['price'], 2) ?></h4>
+                        <h4>₱<?= number_format($p['price_small'], 2) ?></h4>
                     </div>
                     <a class="cart"><i class="fas fa-cart-plus"></i></a>
                 </div>
@@ -183,19 +221,33 @@ $products = $conn->query("SELECT * FROM products WHERE name LIKE '%$filter%' OR 
 
     <script>
         function openPopup(id) {
-            axios.get("../includes/fetch_product.php?id=" + id).then(res => {
-                document.getElementById("popup").style.display = "block";
-                document.getElementById("popupContent").innerHTML = res.data;
+    axios.get("../includes/fetch_product.php?id=" + id).then(res => {
+        const popup = document.getElementById("popup");
+        popup.style.display = "block";
+        document.getElementById("popupContent").innerHTML = res.data;
 
-                // Make sure to bind close to sold out AND regular popups
-                const closeBtn = document.querySelector(".popup-close-btn");
-                if (closeBtn) {
-                    closeBtn.addEventListener("click", () => {
-                        document.getElementById("popup").style.display = "none";
-                    });
-                }
+        // Close button
+        const closeBtn = document.querySelector(".popup-close-btn");
+        if (closeBtn) {
+            closeBtn.addEventListener("click", () => {
+                popup.style.display = "none";
             });
         }
+
+        // Attach dynamic price update handler
+        const sizeSelect = document.querySelector("#popupContent #size");
+        const priceDisplay = document.querySelector("#popupContent #price-display");
+
+        if (sizeSelect && priceDisplay) {
+            sizeSelect.addEventListener("change", () => {
+                const selected = sizeSelect.options[sizeSelect.selectedIndex];
+                const newPrice = parseFloat(selected.getAttribute("data-price")).toFixed(2);
+                priceDisplay.textContent = "₱" + newPrice;
+            });
+        }
+    });
+}
+
 
 
         // Function to toggle the dropdown menu (slide effect)

@@ -24,21 +24,38 @@ if (!$p) {
                 <div class="sold-out-overlay">SOLD OUT</div>
             <?php endif; ?>
         </div>
+
         <div class="popup-details">
             <h6><?= htmlspecialchars($p['category']) ?></h6>
             <h2><?= htmlspecialchars($p['name']) ?></h2>
-            <h3>₱<?= number_format($p['price'], 2) ?></h3>
+
+            <!-- Dynamic Price Display -->
+            <h3 id="price-display">₱<?= number_format($p['price_small'], 2) ?></h3>
 
             <?php if ($p['status'] === 'available'): ?>
-                <form action="add_to_cart.php" method="post" class="popup-cart-form">
-                    <input type="hidden" name="product_id" value="<?= $p['id'] ?>">
-                    <div class="quantity-box">
-                        <button type="button" class="qty-btn" onclick="this.nextElementSibling.stepDown()">-</button>
-                        <input type="number" name="quantity" value="1" min="1">
-                        <button type="button" class="qty-btn" onclick="this.previousElementSibling.stepUp()">+</button>
-                    </div>
-                    <button type="submit" class="add-cart-btn">Add To Cart</button>
-                </form>
+                <form action="../includes/add_to_cart.php" method="post" class="popup-cart-form">
+
+    <input type="hidden" name="product_id" value="<?= $p['id'] ?>">
+    <input type="hidden" name="selected_price" id="selected_price" value="<?= $p['price_small'] ?>">
+
+    <!-- Size Selection -->
+    <label for="size">Size:</label>
+    <select name="size" id="size" onchange="updatePrice()" style="padding: 5px; border-radius: 5px; border: 1px solid #cbb6a8;">
+        <option value="small" data-price="<?= $p['price_small'] ?>">Lil Sip (₱<?= number_format($p['price_small'], 2) ?>)</option>
+        <option value="medium" data-price="<?= $p['price_medium'] ?>">Mid Sip (₱<?= number_format($p['price_medium'], 2) ?>)</option>
+        <option value="large" data-price="<?= $p['price_large'] ?>">Big Sip (₱<?= number_format($p['price_large'], 2) ?>)</option>
+    </select>
+
+    <!-- Quantity -->
+    <div class="quantity-box">
+        <button type="button" class="qty-btn" onclick="this.nextElementSibling.stepDown()">-</button>
+        <input type="number" name="quantity" value="1" min="1">
+        <button type="button" class="qty-btn" onclick="this.previousElementSibling.stepUp()">+</button>
+    </div>
+
+    <button type="submit" class="add-cart-btn">Add To Cart</button>
+</form>
+
             <?php else: ?>
                 <button class="add-cart-btn sold-out-btn" disabled>Sold Out</button>
             <?php endif; ?>
@@ -48,6 +65,8 @@ if (!$p) {
         </div>
     </div>
 </div>
+
+
 
 <style>
 /* Popup Overlay */
@@ -256,3 +275,18 @@ if (!$p) {
     }
 }
 </style>
+
+<script>
+function updatePrice() {
+    const sizeSelect = document.getElementById('size');
+    const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+    const newPrice = selectedOption.getAttribute('data-price');
+
+    // Update visible price
+    const priceDisplay = document.getElementById('price-display');
+    priceDisplay.textContent = '₱' + parseFloat(newPrice).toFixed(2);
+
+    // ✅ Also update hidden input value
+    document.getElementById('selected_price').value = newPrice;
+}
+</script>

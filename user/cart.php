@@ -3,34 +3,74 @@ session_start();
 include '../includes/db.php';
 
 $userId = $_SESSION['user_id'];
-$items = $conn->query("SELECT c.*, p.name, p.price, p.image FROM cart c JOIN products p ON c.product_id = p.id WHERE c.user_id = $userId");
 
+// Fetch cart items including product info
+$items = $conn->query("SELECT c.*, p.name, p.image 
+                       FROM cart c 
+                       JOIN products p ON c.product_id = p.id 
+                       WHERE c.user_id = $userId");
+
+// Handle quantity update
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['qty'])) {
+        foreach ($_POST['qty'] as $cartId => $quantity) {
+            $conn->query("UPDATE cart SET quantity = $quantity WHERE id = $cartId");
+        }
+    }
+
+    // Checkout
 // Handle quantity update and checkout
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    foreach ($_POST['qty'] as $cartId => $quantity) {
-        $conn->query("UPDATE cart SET quantity = $quantity WHERE id = $cartId");
-    }
-    if (isset($_POST['checkout'])) {
-        $method = $_POST['payment_method'];
-        $orders = $conn->query("SELECT * FROM cart WHERE user_id = $userId");
-        while ($o = $orders->fetch_assoc()) {
-            $pid = $o['product_id'];
-            $qty = $o['quantity'];
-            $price = $conn->query("SELECT price FROM products WHERE id = $pid")->fetch_assoc()['price'];
-            $total = $qty * $price;
-            $conn->query("INSERT INTO orders (user_id, product_id, quantity, total_price, status) VALUES ($userId, $pid, $qty, $total, 'Pending')");
+
+    // Update quantities
+    if (isset($_POST['qty'])) {
+        foreach ($_POST['qty'] as $cartId => $quantity) {
+            $conn->query("UPDATE cart SET quantity = $quantity WHERE id = $cartId");
         }
-        $conn->query("DELETE FROM cart WHERE user_id = $userId");
-        header("Location: orders.php");
     }
+
+    // Final order confirmation
+// Final order confirmation
+if (isset($_POST['checkout'])) {
+    $payment_method = $_POST['payment_method'] ?? 'Cash'; // default to COD
+if ($payment_method === 'Cash') $payment_method = 'COD';
+    elseif ($payment_method === 'Gcash') $payment_method = 'Gcash';
+    elseif ($payment_method === 'Card') $payment_method = 'Card';
+
+    $orders = $conn->query("SELECT * FROM cart WHERE user_id = $userId");
+    while ($o = $orders->fetch_assoc()) {
+        $pid = $o['product_id'];
+        $qty = $o['quantity'];
+        $price = $o['price']; // stored price
+        $total = $qty * $price;
+        $size = $o['size']; // get size from cart
+
+        $conn->query("INSERT INTO orders 
+            (user_id, product_id, quantity, price, total_price, status, created_at, size, payment_method) 
+            VALUES 
+            ($userId, $pid, $qty, $price, $total, 'Pending', NOW(), '$size', '$payment_method')");
+    }
+
+    // Clear the cart
+    $conn->query("DELETE FROM cart WHERE user_id = $userId");
+
+    header("Location: orders.php");
+    exit;
 }
 
-// Handle product removal
+}
+
+
+}
+
+// Handle removal
 if (isset($_GET['remove'])) {
     $conn->query("DELETE FROM cart WHERE id=" . $_GET['remove']);
     header("Location: cart.php");
+    exit;
 }
 ?>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -121,6 +161,7 @@ if (isset($_GET['remove'])) {
     <?php if ($items->num_rows > 0): ?>
       <?php while ($item = $items->fetch_assoc()): ?>
         <div class="cart-item" data-id="<?= $item['id'] ?>" data-price="<?= $item['price'] ?>">
+
           <input type="checkbox" class="item-checkbox" checked>
 
           <div class="item-image">
@@ -129,7 +170,8 @@ if (isset($_GET['remove'])) {
 
           <div class="item-details">
             <div class="item-name"><?= htmlspecialchars($item['name']) ?></div>
-            <div class="item-price">₱<?= number_format($item['price'], 2) ?></div>
+            <div class="item-price">₱<?= number_format($item['price'], 2) ?> (<?= ucfirst($item['size']) ?>)</div>
+
 
             <div class="quantity-selector">
               <button type="button" class="qty-btn minus">−</button>
@@ -154,6 +196,59 @@ if (isset($_GET['remove'])) {
   </div>
 </form>
 
+<!-- Checkout Summary Popup -->
+<!-- Checkout Summary Popup -->
+<div id="checkout-popup" style="
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.6); display:flex; justify-content:center; align-items:center;
+    z-index:9999; opacity:0; visibility:hidden; transition: opacity 0.3s ease;">
+
+    <div id="checkout-content" style="
+        background:#fff; padding:30px 25px; border-radius:15px; width:90%; max-width:450px;
+        position:relative; transform: scale(0.8); transition: transform 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.3); font-family: Arial, sans-serif;">
+        
+        <span id="checkout-close" style="
+            position:absolute; top:12px; right:12px; cursor:pointer; font-size:26px; color:#333;">&times;</span>
+        
+        <h2 style="text-align:center; margin-bottom:20px; color:#222;">Order Summary</h2>
+        
+        <div id="order-details" style="
+            max-height:200px; overflow-y:auto; margin-bottom:15px; padding:10px; 
+            border:1px solid #ddd; border-radius:10px; background:#f9f9f9; font-size:14px;"></div>
+        
+        <h3 style="text-align:right; margin-bottom:15px; color:#111;">Total: ₱<span id="order-total">0.00</span></h3>
+        
+        <!-- Payment Method -->
+        <div style="margin-bottom:20px; font-size:14px; text-align:center;">
+            <label style="margin-right:15px; cursor:pointer;">
+                <input type="radio" name="payment_method" value="Cash" checked> COD
+            </label>
+            <label style="margin-right:15px; cursor:pointer;">
+                <input type="radio" name="payment_method" value="Gcash"> GCash
+            </label>
+            <label style="cursor:pointer;">
+                <input type="radio" name="payment_method" value="Card"> Card
+            </label>
+        </div>
+        
+<form method="post" id="finalize-order-form" style="text-align:center;">
+    <input type="hidden" name="checkout" value="1">
+    <input type="hidden" name="payment_method" id="selected-payment" value="Cash">
+    <button type="submit" style="
+        background: #ff6f61; color:#fff; border:none; padding:12px 25px; 
+        border-radius:8px; font-size:16px; cursor:pointer; transition: background 0.3s;">
+        Confirm Order
+    </button>
+</form>
+
+    </div>
+</div>
+
+
+
+
+
 
   <!-- Fixed Checkout Footer -->
   <div class="cart-summary">
@@ -161,6 +256,7 @@ if (isset($_GET['remove'])) {
     <button id="checkout-btn" form="cart-form" name="checkout">Checkout</button>
   </div>
 </section>
+
 
 
 
@@ -319,6 +415,83 @@ window.addEventListener("click", function(e) {
         });
     }
 });
+
+// CHECKOUT POPUP LOGIC
+const checkoutBtn = document.getElementById("checkout-btn");
+const popup = document.getElementById("checkout-popup");
+const content = document.getElementById("checkout-content");
+const closePopup = document.getElementById("checkout-close");
+
+checkoutBtn.addEventListener("click", (e) => {
+    e.preventDefault(); // prevent immediate form submission
+
+    const items = document.querySelectorAll(".cart-item");
+    let detailsHTML = "<ul>";
+    let total = 0;
+
+    items.forEach(item => {
+        const checkbox = item.querySelector(".item-checkbox");
+        if (!checkbox.checked) return;
+
+        const name = item.querySelector(".item-name").textContent;
+        const price = parseFloat(item.dataset.price);
+        const qty = parseInt(item.querySelector(".qty-input").value);
+        const subtotal = price * qty;
+        total += subtotal;
+
+        detailsHTML += `<li>${name} - ${qty} x ₱${price.toFixed(2)} = ₱${subtotal.toFixed(2)}</li>`;
+    });
+
+    detailsHTML += "</ul>";
+    document.getElementById("order-details").innerHTML = detailsHTML;
+    document.getElementById("order-total").textContent = total.toFixed(2);
+
+    // Show popup with fade-in and scale
+    popup.style.visibility = "visible";
+    popup.style.opacity = "1";
+    content.style.transform = "scale(1)";
+});
+
+// Close popup
+closePopup.addEventListener("click", () => {
+    popup.style.opacity = "0";
+    content.style.transform = "scale(0.8)";
+    setTimeout(() => popup.style.visibility = "hidden", 300);
+});
+
+// Optional: click outside content closes popup
+popup.addEventListener("click", (e) => {
+    if (e.target === popup) {
+        popup.style.opacity = "0";
+        content.style.transform = "scale(0.8)";
+        setTimeout(() => popup.style.visibility = "hidden", 300);
+    }
+});
+
+// Update hidden input with selected payment method before form submit
+const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
+const paymentInput = document.getElementById("selected-payment");
+const finalizeForm = document.getElementById("finalize-order-form");
+
+paymentRadios.forEach(radio => {
+    radio.addEventListener("change", () => {
+        paymentInput.value = radio.value;
+    });
+});
+
+// Optional: ensure payment input has correct default on page load
+paymentInput.value = document.querySelector('input[name="payment_method"]:checked').value;
+
+paymentRadios.forEach(radio => {
+    radio.addEventListener("change", () => {
+        paymentInput.value = radio.value;
+    });
+});
+
+// set default on page load
+paymentInput.value = document.querySelector('input[name="payment_method"]:checked').value;
+
+
 
 </script>
 

@@ -1,9 +1,40 @@
 <?php
 session_start();
 include '../includes/db.php';
+
+// Ensure user is logged in
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit;
+}
+
 $userId = $_SESSION['user_id'];
-$orders = $conn->query("SELECT o.*, p.name, p.image FROM orders o JOIN products p ON o.product_id = p.id WHERE o.user_id = $userId");
+
+// Handle delete request
+if (isset($_GET['delete'])) {
+    $orderId = intval($_GET['delete']);
+    
+    $stmt = $conn->prepare("DELETE FROM orders WHERE id = ? AND user_id = ?");
+    $stmt->bind_param("ii", $orderId, $userId);
+    
+    if ($stmt->execute()) {
+        header("Location: orders.php"); // refresh page after deletion
+        exit;
+    } else {
+        die("Failed to delete order: " . $stmt->error);
+    }
+}
+
+// Fetch orders
+$orders = $conn->query("
+    SELECT o.*, p.name, p.image 
+    FROM orders o
+    JOIN products p ON o.product_id = p.id
+    WHERE o.user_id = $userId
+    ORDER BY o.created_at DESC
+");
 ?>
+
 
 <!DOCTYPE html>
 <html>
@@ -82,28 +113,59 @@ $orders = $conn->query("SELECT o.*, p.name, p.image FROM orders o JOIN products 
   <table>
     <thead>
       <tr>
+        <th></th> <!-- delete column -->
         <th>Image</th>
         <th>Name</th>
         <th>Quantity</th>
         <th>Total</th>
+        <th>Payment</th>
+        <th>Delivery</th>
         <th>Status</th>
       </tr>
     </thead>
     <tbody>
       <?php while ($o = $orders->fetch_assoc()): ?>
       <tr>
+        <!-- Delete button -->
         <td>
-          <img src="../assets/images/products/<?= $o['image'] ?>" width="60" style="cursor:pointer;" onclick="openPopup(<?= $o['product_id'] ?>)">
+            <a href="?delete=<?= $o['id'] ?>" class="delete-btn" onclick="return confirm('Are you sure you want to delete this order?')">×</a>
+        </td>
+
+        <td>
+            <img src="../assets/images/products/<?= $o['image'] ?>" width="60">
         </td>
         <td><?= $o['name'] ?></td>
         <td><?= $o['quantity'] ?></td>
-        <td>₱<?= number_format($o['total_price'], 2) ?></td>
-        <td><span class="status <?= $o['status'] ?>"><?= $o['status'] ?></span></td>
+        <td>₱<?= number_format($o['total_price'],2) ?></td>
+        <td><?= htmlspecialchars($o['payment_method']) ?></td>
+        <td>
+            <span class="status-badge" style="<?php
+                switch($o['delivery_status']){
+                    case 'Pending': echo 'background:#fdd835;color:#000;'; break;
+                    case 'Picked Up': echo 'background:#42a5f5;color:#fff;'; break;
+                    case 'On the Way': echo 'background:#fb8c00;color:#fff;'; break;
+                    case 'Delivered': echo 'background:#66bb6a;color:#fff;'; break;
+                    case 'Cancelled': echo 'background:#ef5350;color:#fff;'; break;
+                    default: echo 'background:#ccc;color:#000;';
+                }
+            ?>"><?= $o['delivery_status'] ?></span>
+        </td>
+        <td>
+            <span class="status-badge" style="<?php
+                switch($o['status']){
+                    case 'Pending': echo 'background:#fdd835;color:#000;'; break;
+                    case 'Confirmed': echo 'background:#66bb6a;color:#fff;'; break;
+                    case 'Cancelled': echo 'background:#ef5350;color:#fff;'; break;
+                    default: echo 'background:#ccc;color:#000;';
+                }
+            ?>"><?= $o['status'] ?></span>
+        </td>
       </tr>
       <?php endwhile; ?>
     </tbody>
   </table>
 </section>
+
 
 
 <!-- FOOTER -->
