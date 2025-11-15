@@ -10,20 +10,54 @@ if (!isset($_SESSION['user_id'])) {
 
 $userId = $_SESSION['user_id'];
 
+if (isset($_GET['return'])) {
+    $orderId = intval($_GET['return']);
+
+    // Only delivered or completed orders can be returned
+    $stmt = $conn->prepare("
+        UPDATE orders 
+        SET status = 'Return Requested', delivery_status = 'Return Requested'
+        WHERE id = ? AND user_id = ?
+        AND status IN ('Delivered', 'Completed')
+    ");
+
+    $stmt->bind_param("ii", $orderId, $userId);
+    $stmt->execute();
+
+    if ($stmt->affected_rows > 0) {
+        echo "<script>alert('Return request submitted successfully.');</script>";
+        header("Location: orders.php");
+        exit;
+    } else {
+        echo "<script>alert('Return request cannot be processed.');</script>";
+    }
+}
+
 // Handle delete request
 if (isset($_GET['delete'])) {
     $orderId = intval($_GET['delete']);
-    
-    $stmt = $conn->prepare("DELETE FROM orders WHERE id = ? AND user_id = ?");
+
+    // User can cancel only if not delivered or completed
+$stmt = $conn->prepare("
+    UPDATE orders 
+    SET status = 'Cancelled', delivery_status = 'Cancelled' 
+    WHERE id = ? 
+      AND user_id = ? 
+      AND delivery_status NOT IN ('Delivered', 'Completed')
+");
+
+
     $stmt->bind_param("ii", $orderId, $userId);
-    
-    if ($stmt->execute()) {
-        header("Location: orders.php"); // refresh page after deletion
+    $stmt->execute();
+
+    if ($stmt->affected_rows > 0) {
+        header("Location: orders.php");
         exit;
     } else {
-        die("Failed to delete order: " . $stmt->error);
+        echo "<script>alert('Order cannot be cancelled because it is already delivered or completed.');</script>";
     }
 }
+
 
 // Fetch orders
 $orders = $conn->query("
@@ -126,10 +160,20 @@ $orders = $conn->query("
     <tbody>
       <?php while ($o = $orders->fetch_assoc()): ?>
       <tr>
-        <!-- Delete button -->
-        <td>
-            <a href="?delete=<?= $o['id'] ?>" class="delete-btn" onclick="return confirm('Are you sure you want to delete this order?')">×</a>
-        </td>
+        
+      <!-- Delete button -->
+<td>
+    <?php if ($o['delivery_status'] != 'Delivered' && $o['delivery_status'] != 'Completed' 
+              && $o['status'] != 'Cancelled' && $o['status'] != 'Return Requested'): ?>
+        <a href="?delete=<?= $o['id'] ?>" class="action-btn cancel" 
+           title="Cancel Order" onclick="return confirm('Are you sure you want to cancel this order?')">
+           <i class="fas fa-times"></i>
+        </a>
+    <?php endif; ?>
+
+</td>
+
+
 
         <td>
             <img src="../assets/images/products/<?= $o['image'] ?>" width="60">
@@ -150,16 +194,29 @@ $orders = $conn->query("
                 }
             ?>"><?= $o['delivery_status'] ?></span>
         </td>
-        <td>
-            <span class="status-badge" style="<?php
-                switch($o['status']){
-                    case 'Pending': echo 'background:#fdd835;color:#000;'; break;
-                    case 'Confirmed': echo 'background:#66bb6a;color:#fff;'; break;
-                    case 'Cancelled': echo 'background:#ef5350;color:#fff;'; break;
-                    default: echo 'background:#ccc;color:#000;';
-                }
-            ?>"><?= $o['status'] ?></span>
-        </td>
+<td>
+    <span class="status-badge" style="<?php
+        switch($o['status']){
+            case 'Pending': echo 'background:#fdd835;color:#000;'; break;
+            case 'Confirmed': echo 'background:#66bb6a;color:#fff;'; break;
+            case 'Cancelled': echo 'background:#ef5350;color:#fff;'; break;
+            case 'Delivered': echo 'background:#42a5f5;color:#fff;'; break;
+            case 'Completed': echo 'background:#6a1b9a;color:#fff;'; break;
+            case 'Return Requested': echo 'background:#ab47bc;color:#fff;'; break;
+
+            default: echo 'background:#ccc;color:#000;';
+        }
+    ?>"><?= $o['status'] ?></span>
+
+    <!-- Return Icon (only if delivered or completed) -->
+    <?php if (in_array($o['status'], ['Delivered', 'Completed'])): ?>
+        <a href="?return=<?= $o['id'] ?>" class="action-btn return" 
+           title="Request Return" onclick="return confirm('Request return for this order?')">
+           <i class="fas fa-undo"></i>
+        </a>
+    <?php endif; ?>
+</td>
+
       </tr>
       <?php endwhile; ?>
     </tbody>

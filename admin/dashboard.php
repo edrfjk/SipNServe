@@ -19,8 +19,16 @@ $recentOrders = $conn->query("SELECT o.*, u.username, p.name AS product_name FRO
 // Fetch user list
 $usersList = $conn->query("SELECT username, profile_img FROM users ORDER BY id DESC LIMIT 5");
 
-// Fetch top 3 products
-$topProducts = $conn->query("SELECT p.name, p.image, SUM(o.quantity) AS sold_qty FROM orders o JOIN products p ON o.product_id = p.id WHERE o.status='Confirmed' GROUP BY o.product_id ORDER BY sold_qty DESC LIMIT 4");
+$topProducts = $conn->query("
+    SELECT p.name, p.image, SUM(o.quantity) AS sold_qty
+    FROM orders o
+    JOIN products p ON o.product_id = p.id
+    WHERE o.status='Completed'  -- change this from 'Confirmed'
+    GROUP BY o.product_id
+    ORDER BY sold_qty DESC
+    LIMIT 4
+");
+
 ?>
 <!DOCTYPE html>
 <html lang="en">

@@ -147,7 +147,7 @@ $topProducts = $conn->query("SELECT * FROM products ORDER BY id DESC LIMIT 4");
               <i class="fas fa-star"></i> <i class="fas fa-star"></i>
               <i class="fas fa-star-half-alt"></i>
             </div>
-            <h4>₱<?= number_format($p['price'], 2) ?></h4>
+            <h4>₱<?= number_format($p['price_small'], 2) ?></h4>
           </div>
           <a class="cart"><i class="fas fa-cart-plus"></i></a>
         </div>

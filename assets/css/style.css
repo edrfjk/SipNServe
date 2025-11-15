@@ -1939,3 +1939,50 @@ footer {
   pointer-events: none;
 }
 
+
+/* Delivery & Status badges */
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    display: inline-block;
+    text-align: center;
+    min-width: 80px;
+}
+
+/* Colors for Delivery */
+.status-badge.delivery-Pending { background:#fdd835; color:#000; }
+.status-badge.delivery-PickedUp { background:#42a5f5; color:#fff; }
+.status-badge.delivery-OnTheWay { background:#fb8c00; color:#fff; }
+.status-badge.delivery-Delivered { background:#66bb6a; color:#fff; }
+.status-badge.delivery-Cancelled { background:#ef5350; color:#fff; }
+.status-badge.delivery-ReturnRequested { background:#ab47bc; color:#fff; }
+
+/* Colors for Status */
+.status-badge.status-Pending { background:#fdd835; color:#000; }
+.status-badge.status-Confirmed { background:#66bb6a; color:#fff; }
+.status-badge.status-Cancelled { background:#ef5350; color:#fff; }
+.status-badge.status-Delivered { background:#42a5f5; color:#fff; }
+.status-badge.status-Completed { background:#6a1b9a; color:#fff; }
+.status-badge.status-ReturnRequested { background:#ab47bc; color:#fff; }
+
+/* Action icons */
+.action-btn {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    color: #fff;
+    text-decoration: none;
+    font-size: 14px;
+    transition: all 0.2s ease-in-out;
+}
+
+.action-btn.cancel { background: #ef5350; }
+.action-btn.cancel:hover { background: #d32f2f; }
+
+.action-btn.return { background: #ff9800; }
+.action-btn.return:hover { background: #f57c00; }
+
+.action-btn i { pointer-events: none; } /* prevents icon from blocking click */
