@@ -11,7 +11,8 @@ include '../includes/db.php';
 // Fetch totals
 $totalUsers = $conn->query("SELECT COUNT(*) AS total FROM users")->fetch_assoc()['total'];
 $totalOrders = $conn->query("SELECT COUNT(*) AS total FROM orders")->fetch_assoc()['total'];
-$totalSales = $conn->query("SELECT SUM(total_price) AS total FROM orders WHERE status='Confirmed'")->fetch_assoc()['total'];
+$totalSales = $conn->query("SELECT COALESCE(SUM(total_price), 0) AS total FROM orders WHERE status IN ('Confirmed','Completed')")->fetch_assoc()['total'];
+
 
 // Fetch recent orders
 $recentOrders = $conn->query("SELECT o.*, u.username, p.name AS product_name FROM orders o JOIN users u ON o.user_id = u.id JOIN products p ON o.product_id = p.id ORDER BY o.id DESC LIMIT 5");
